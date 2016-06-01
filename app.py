@@ -1,8 +1,18 @@
+#!/usr/bin/env python
+
+from __future__ import print_function
+import sys
+import os
+import ssl
 from flask import Flask, redirect, url_for, render_template
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.login import LoginManager, UserMixin, login_user, logout_user,\
     current_user
 from oauth import OAuthSignIn
+
+
+context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+context.load_cert_chain('ssl.cert', 'ssl.key')
 
 
 app = Flask(__name__)
@@ -16,6 +26,10 @@ app.config['OAUTH_CREDENTIALS'] = {
     'twitter': {
         'id': '3RzWQclolxWZIMq5LJqzRZPTl',
         'secret': 'm9TEd58DSEtRrZHpz2EjrV9AhsBRxKMo8m3kuIZj3zLwzwIimt'
+    },
+    'github': {
+        'id': '4bef2e3fc12840fe9b17',
+        'secret': '487964cbd9b2a2e2cf5c1b5945871ed732d697f3'
     }
 }
 
@@ -76,4 +90,9 @@ def oauth_callback(provider):
 
 if __name__ == '__main__':
     db.create_all()
-    app.run(debug=True)
+
+    # This allows us to use a plain HTTP callback
+    os.environ['DEBUG'] = "1"
+
+    app.secret_key = os.urandom(24)
+    app.run(host='0.0.0.0', port=9090, ssl_context=context, threaded=True, debug=True)
